@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Intercom powered by Twilio</title>
+    <script type="text/javascript"
+      src="https://static.twilio.com/libs/twiliojs/1.0/twilio.js">
+    </script>
+    <script type="text/javascript"
+      src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js">
+    </script>
+    <link href="/css/normalize.css" type="text/css" rel="stylesheet" />
+    <link href="/css/button.css" type="text/css" rel="stylesheet" />
+    <link href="/css/intercom.css" type="text/css" rel="stylesheet" />
+    <script type="text/javascript" src="/js/jquery.tmpl.js"></script>
+    <script type="text/javascript" src="/js/modernizr.js"></script>
+    <script type="text/javascript" src="/js/knockout.js"></script>
+    <script type="text/javascript">
+      Twilio.Device.ready(function (device) {
+        $("header aside").text("Online");
+        console.log("Ready");
+      });
+
+      Twilio.Device.offline(function (device) {
+        $("header aside").text("Offline");
+        console.log("Offline");
+      });
+
+      Twilio.Device.error(function (error) {
+        console.log("Error: " + error.message);
+      });
+
+      Twilio.Device.connect(function (conn) {
+        console.log("Successfully established call");
+      });
+
+      $(document).ready(function(){
+        
+        var viewModel = {};
+
+        // Is there a better way to call the view model?
+        var User = function(id, fullName, status) {
+          this.id = id;
+          this.fullName = fullName;
+          this.status = ko.observable(status);
+          
+          this.call = function(event) {
+            Twilio.Device.connect({ "Person" : this.id });
+            viewModel.active(this.fullName);
+          }
+        }
+
+        // Overall viewmodel for this screen, along with initial state
+        viewModel = {
+          
+          // Three possible filters for the contact list
+          statuses: ["all", "available", "unavailable"],
+          
+          // The list of all users
+          users: ko.observableArray([]),
+          
+          // A map of username to user model
+          userMapping: {},
+          
+          // The active user model
+          active: ko.observable(false),
+          
+          // The active user model
+          incoming: ko.observable(false),
+          
+          // The current list filter. Defaults to "All"
+          filter: ko.observable("{{user_filter}}"),
+          
+          // Get and user
+          // Add the user to the user mapping and user list
+          getUser: function(id, fullName) {
+
+            // If we haven't seen this person, create a new User
+            if (this.userMapping[id] === undefined) {
+              var user = new User(id, fullName, "unavailable");
+              this.userMapping[id] = user;
+              this.users.push(user);
+            }
+            
+            // Update this user's presence information
+            return this.userMapping[id];
+          },
+          
+          // Update the user
+          // Create the user if it doesn't exist
+          updateUser: function(id, available) {
+            var user = this.getUser(id, id);
+            if (available)
+              user.status("available");
+            else
+              user.status("unavailable");
+          },
+          
+          // Disconnect the current call
+          hangup: function(event) {
+            Twilio.Device.disconnectAll();
+            this.active(false);
+          },
+
+          cancel: function(event) {
+            if (this.incoming()){
+              this.incoming().cancel();
+            }
+            this.incoming(false);
+            this.active(false);
+          },
+
+          accept: function(event) {
+            if (this.incoming()){
+              this.incoming().accept();
+            }
+            this.incoming(false);
+          }
+        };
+        
+        // Filter the users list by status
+        viewModel.filteredUsers = ko.dependentObservable(function() {
+            var filter = this.filter().toLowerCase();
+            if (filter === "all") {
+                return this.users();
+            } else {
+                return ko.utils.arrayFilter(this.users(), function(item) {
+                    return item.status() === filter;
+                });
+            }
+        }, viewModel);
+
+        // When the device gets an incoming call
+        Twilio.Device.incoming(function (conn) {
+
+          // Determine the name of the person calling
+          var id = conn.parameters.From;
+          var user = viewModel.userMapping[id];
+          var name = user.fullName || conn.parameters.From;
+
+          console.log("Incoming connection from " + name);
+          viewModel.incoming(conn);
+          viewModel.active(name);
+        });
+
+        // When the call ends
+        Twilio.Device.disconnect(function (conn) {
+          console.log("Call ended");
+          // Deactivate the call window
+          viewModel.active(false);
+        });
+
+        // Apply the Knockout.js Bindings
+        ko.applyBindings(viewModel);
+
+        // When the presence of another person changes
+        Twilio.Device.presence(function(e) {
+          // Update the their user model
+          viewModel.updateUser(e.from, e.available);
+        });
+
+        // When we change the filter at the top of the page
+        $("select").change(function(e){
+          var filter = $(e.target).val();
+          var url = filter === "all" ? "/" : "/" + filter;
+          
+          // Change the url of the page
+          if (Modernizr.history) {
+            history.pushState(null, null, url);
+          } else {
+            window.location = url;
+          }
+        });
+
+        // Load the users
+        $.get("/users").success(function(data){
+
+          $.each(data, function(index, person){
+            viewModel.getUser("client:" + person.id, person.name);
+          });
+
+          Twilio.Device.setup("{{token}}");
+        });
+      });
+    </script>
+    </head>
+  <body>
+    <div id="wrapper">
+    <section>
+      <header>
+        <h1>intercom</h1>
+        <label for="listFilter">Filter</label>
+        <select id="listFilter" 
+          data-bind="options: statuses, value: filter"></select>
+      </header>
+      <ul data-bind="template: {name:'contactTemplate', foreach: filteredUsers}">
+      </ul>
+      <footer data-bind="visible: active">
+        <h1 data-bind="text: active"></h1>
+        <button class="button danger" data-bind="click: cancel, visible: incoming">
+          Cancel
+        </button>
+        <button class="button" data-bind="click: accept, visible: incoming">
+          Accept
+        </button>
+        <button class="button danger" data-bind="click: hangup, visible: incoming() == false">
+          Hangup
+        </button>
+      </footer>
+    </section>
+    </div>
+  </body>
+
+  <script type="text/x-jquery-tmpl" id="contactTemplate">
+    <li>
+      <div data-bind="attr: { class: status }"></div>
+      <span data-bind="text: fullName"></span>
+      <button class="button" data-bind="click: call">Call</button>
+    </li>
+  </script>
+</html>
+
+

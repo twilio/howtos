@@ -1,0 +1,124 @@
+h1, h2, h3, h4, h5, h6, ul{
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #111 url("../images/padded.png");
+}
+
+#wrapper {
+  background: transparent;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-box-align: center;
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+}
+
+section {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  max-width: 400px;
+  width: 100%;
+  background: #FFF;
+  color: #111;
+  -webkit-box-flex: 1;
+}
+
+section > header h1{
+  text-align: left;
+}
+
+section > ul {
+  overflow-y: auto;
+  -webkit-box-flex: 1;
+}
+
+
+section > footer h1 {
+  -webkit-box-flex: 1;
+  text-align: left;
+}
+
+section > footer {
+  display: -webkit-box;
+  -webkit-box-align: center;
+  padding: 15px;
+  border-top: 1px solid #aaa;
+}
+
+section > footer > button{
+  border: 1px solid #aaa !important;
+}
+
+header {
+  display: -webkit-box;
+  -webkit-box-align: center;
+  border-bottom: 1px solid #aaa;
+}
+
+header, footer {
+  padding: 15px;
+  text-align: center;
+  display: -webkit-box;
+  -webkit-box-align: center;
+  background: #efefef; /* Old browsers */
+  background: -moz-linear-gradient(top, #efefef 0%, #bcbcbc 100%); /* FF3.6+ */
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#efefef), color-stop(100%,#bcbcbc)); /* Chrome,Safari4+ */
+  background: -webkit-linear-gradient(top, #efefef 0%,#bcbcbc 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-linear-gradient(top, #efefef 0%,#bcbcbc 100%); /* Opera11.10+ */
+  background: -ms-linear-gradient(top, #efefef 0%,#bcbcbc 100%); /* IE10+ */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#efefef', endColorstr='#bcbcbc',GradientType=0 ); /* IE6-9 */
+  background: linear-gradient(top, #efefef 0%,#bcbcbc 100%); /* W3C */
+}
+
+header h1, header aside {
+  -webkit-box-flex: 1;
+}
+
+ul li {
+  padding: 10px 15px;
+  display: -webkit-box;
+  -webkit-box-align: center;
+  border-bottom: 1px solid #ddd;
+}
+
+ul li button, ul li span {
+  display: block;
+}
+
+ul li button {
+  width: 50px;
+  margin-left: 10px;
+}
+
+ul li span {
+  -webkit-box-flex: 1;
+}
+
+ul li div {
+  margin-right: 10px;
+  width: 10px;
+  height: 10px;
+  border-radius: 100px;
+  border-width: 1px;
+  border-style: solid;
+}
+
+div.unavailable {
+  background: #ccc;
+  border-color: #aaa;
+}
+
+div.available {
+  background: #8ee63b;
+  border-color: #6ab601;
+}
+
+select option {
+  text-transform:capitalize;
+}

@@ -1,0 +1,43 @@
+application: twilio-intercom
+version: 1
+runtime: python
+api_version: 1
+
+builtins:
+- remote_api: on
+
+handlers:
+- url: /console/.*
+  script: $PYTHON_LIB/google/appengine/ext/admin
+  login: admin
+- url: /js
+  static_dir: static/js
+- url: /images
+  static_dir: static/images
+- url: /css
+  static_dir: static/css
+- url: /call
+  script: main.py
+- url: .*
+  script: main.py
+  login: required
+
+admin_console:
+  pages:
+  - name: Memcache
+    url: /console/memcache
+
+skip_files: |
+ ^(.*/)?(
+ (#.*#)|
+ (.*~)|
+ (.*\.py[co])|
+ (.*/RCS/.*)|
+ (\..*)|
+ (dev/.*)|
+ (tests/.*)|
+ (docs/.*)|
+ (.*\.markdown)|
+ (license\.txt)|
+ (setup.py)
+ )$
